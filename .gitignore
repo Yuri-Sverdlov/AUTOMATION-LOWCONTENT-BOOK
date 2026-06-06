@@ -9,3 +9,13 @@ __pycache__/
 *.jpeg
 *.jpg
 data/niches/*/output/
+output/
+
+# но эталоны серии 1 держим в репозитории (нужны кодеру для сверки)
+!reference/series-1/**
+
+# временные lock-файлы MS Office (~$Document.docx и т.п.)
+~$*
+
+# локальные настройки/воркстри Claude Code
+.claude/
