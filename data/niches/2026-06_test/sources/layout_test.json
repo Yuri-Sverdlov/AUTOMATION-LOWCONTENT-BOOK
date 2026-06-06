@@ -1,0 +1,20 @@
+{
+  "comment": "Тест-кейс раскладки текста по арту (шаг А, выдан vision-моделью/архитектором). Вход для engine/text_layout.py. Координаты box_pct = [x, y, ширина, высота] в процентах от размера арта, начало в левом-верхнем углу.",
+  "canvas": "front_cover",
+  "image": "data/niches/2026-06_test/sources/images/front_art_test.png",
+  "image_px": [733, 903],
+  "elements": {
+    "title": {
+      "text": "Things I Do When Nobody’s Watching (Totally SFW Edition)",
+      "box_pct": [10, 32, 80, 40],
+      "box_px": [73, 288, 586, 362],
+      "align": "left",
+      "valign": "top",
+      "color": "#FFFFFF",
+      "scrim": false,
+      "max_lines": 5,
+      "font": null,
+      "note": "верх-право занят полусферой → текст ниже y=32%; фон тёмный и ровный (яркость ~50) → белый без подложки. font=null → дефолтный TTF (DejaVuSans-Bold), позже подставится шрифт ниши."
+    }
+  }
+}

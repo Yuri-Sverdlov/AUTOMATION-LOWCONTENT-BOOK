@@ -1,0 +1,40 @@
+# niche.yaml — ПАСПОРТ ниши (контракт, из которого кормится весь конвейер)
+# Это ТЕСТОВАЯ ниша-каркас (slug: test). Значения с пометкой TODO — заглушки,
+# заполняются на этапе разведки (Фаза 1). Геометрия интерьера — реальная,
+# скопирована со спецификации серии 1 (см. reference/series-1/ и tasks/done/).
+
+niche: test
+audience: "TODO: например women 30-55"
+format: 7.5x9.25            # реальный размер серии 1 (дюймы), No Bleed
+interior_type: lined        # lined | dot-grid | sudoku | tracker | prompt-journal
+interior_style: wide_ruled  # для lined: wide_ruled | college | narrow
+
+# --- реальные геометрические параметры интерьера (источник: серия 1) ---
+interior_spec:
+  page_pt: [540, 666]       # 7.5 x 9.25" в пунктах (72pt/inch)
+  pages: 110
+  lines_per_page: 26
+  line_color: "#999999"
+  line_width_pt: 0.48
+  line_x_pt: [28.35, 521.10]
+  first_line_top_pt: 24.30
+  line_spacing_pt: 24.696
+  front_matter_image: null  # стр.1 — декоративная картинка (позже)
+
+# --- маркетинговая часть (TODO: заполнить на разведке) ---
+palette: ["#FFFFFF", "#000000"]          # TODO: цвета из топа ниши
+fonts: ["TODO-Display", "TODO-Body"]
+title_formula: "{audience} + {type} + {hook}"
+keywords:                                 # 7 backend-слотов KDP, до 50 символов
+  - "TODO keyword 1"
+  - "TODO keyword 2"
+  - "TODO keyword 3"
+  - "TODO keyword 4"
+  - "TODO keyword 5"
+  - "TODO keyword 6"
+  - "TODO keyword 7"
+description_template: "templates/test.html"  # TODO
+price: 6.99                                # TODO: цена из топа ниши
+
+# Настройки KDP (из reference/series-1/KDP_SETTINGS.txt):
+# Paperback · Black & White interior · White paper · 7.5x9.25 · No Bleed
