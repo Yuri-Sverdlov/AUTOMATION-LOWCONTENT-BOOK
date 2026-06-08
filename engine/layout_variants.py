@@ -28,6 +28,7 @@ ARCHETYPES: list[dict] = [
         "leading": 1.20,
         "tracking": 0,
         "scrim":   False,
+        "max_font_pct": 12,
     },
     {
         "id":      "B",
@@ -38,6 +39,7 @@ ARCHETYPES: list[dict] = [
         "leading": 1.14,   # tight: 1.2 × 0.95
         "tracking": 0,
         "scrim":   True,
+        "max_font_pct": 11,
     },
     {
         "id":      "C",
@@ -48,6 +50,7 @@ ARCHETYPES: list[dict] = [
         "leading": 1.50,   # airy: 1.2 × 1.25
         "tracking": 0,
         "scrim":   False,
+        "max_font_pct": 11,
     },
     {
         "id":      "D",
@@ -58,6 +61,7 @@ ARCHETYPES: list[dict] = [
         "leading": 1.20,
         "tracking": 0,
         "scrim":   False,
+        "max_font_pct": 12,
     },
     {
         "id":      "E",
@@ -68,6 +72,7 @@ ARCHETYPES: list[dict] = [
         "leading": 1.20,
         "tracking": 3,     # extra letter-spacing
         "scrim":   False,
+        "max_font_pct": 11,
     },
 ]
 
@@ -96,18 +101,30 @@ def _gallery_font(size: int) -> ImageFont.FreeTypeFont:
 
 
 def _build_spec(archetype: dict, text: str | dict,
-                img_w: int, img_h: int, base_color: str) -> dict:
+                img_w: int, img_h: int, base_color: str, safe_box_pct: list[float]) -> dict:
     """Build a full text_layout JSON spec from an archetype + text input."""
     if isinstance(text, str):
         roles = {"title": text}
     else:
         roles = text  # dict of {title, subtitle, author, ...}
 
+    # safe_box_pct: [x%, y%, w%, h%] from entire art
+    sx, sy, sw, sh = safe_box_pct
+    # archetype box_pct: now interpreted as percentages WITHIN the safe zone
+    ax, ay, aw, ah = archetype["box_pct"]
+    # Convert to absolute percentages from entire art
+    abs_box = [
+        sx + ax / 100 * sw,
+        sy + ay / 100 * sh,
+        aw / 100 * sw,
+        ah / 100 * sh,
+    ]
+
     elements = {}
     for role, content in roles.items():
         elements[role] = {
             "text":      content,
-            "box_pct":   archetype["box_pct"],
+            "box_pct":   abs_box,
             "align":     archetype["align"],
             "valign":    archetype.get("valign", "top"),
             "color":     base_color,
@@ -116,6 +133,7 @@ def _build_spec(archetype: dict, text: str | dict,
             "font":      None,
             "leading":   archetype["leading"],
             "tracking":  archetype["tracking"],
+            "max_font_pct": archetype.get("max_font_pct"),
         }
 
     return {
@@ -175,6 +193,7 @@ def generate_variants(
     out_dir: str,
     archetypes: list[dict] | None = None,
     base_color: str = "#FFFFFF",
+    safe_box_pct: list[float] | None = None,
 ) -> dict:
     """
     Render N layout variants for the given art and text.
@@ -184,6 +203,7 @@ def generate_variants(
     :param out_dir:    output directory for PNG + JSON files
     :param archetypes: list of archetype dicts (None → built-in A..E)
     :param base_color: default text color (used unless overridden per element)
+    :param safe_box_pct: [x%, y%, w%, h%] safe zone from entire art (None → [0,0,100,100])
     :returns: dict keyed by variant id → {id, name, png, json, render_info}
     """
     # Import here to avoid circular dep if modules are co-located
@@ -192,6 +212,9 @@ def generate_variants(
 
     if archetypes is None:
         archetypes = ARCHETYPES
+
+    if safe_box_pct is None:
+        safe_box_pct = [0, 0, 100, 100]
 
     art_img = Image.open(art_path)
     art_w, art_h = art_img.size
@@ -208,7 +231,7 @@ def generate_variants(
         png_path = os.path.join(out_dir, f"variant_{vid}.png")
         json_path = os.path.join(out_dir, f"variant_{vid}.json")
 
-        spec = _build_spec(arch, text, art_w, art_h, base_color)
+        spec = _build_spec(arch, text, art_w, art_h, base_color, safe_box_pct)
 
         # Save spec for reproducibility
         with open(json_path, "w", encoding="utf-8") as f:

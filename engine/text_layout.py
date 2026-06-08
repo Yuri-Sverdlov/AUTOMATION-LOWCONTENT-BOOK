@@ -98,6 +98,7 @@ def _autofit_font(
     max_lines: int,
     leading: float = 1.2,
     tracking: int = 0,
+    max_font_size: int | None = None,
 ) -> tuple[ImageFont.FreeTypeFont, list[str], int]:
     """
     Find the largest font size where wrapped text fits in box_w×box_h
@@ -105,7 +106,8 @@ def _autofit_font(
     Returns (font, lines, font_size).
     """
     dummy = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    size  = min(_FONT_SIZE_MAX, box_h)
+    cap   = max_font_size or _FONT_SIZE_MAX
+    size  = min(_FONT_SIZE_MAX, box_h, cap)
 
     while size >= _FONT_SIZE_MIN:
         font  = _load_font(font_path, size)
@@ -195,8 +197,10 @@ def render_layout(
             bh  = round(pct[3] / 100 * img_h)
 
         # ── Auto-fit font & wrap ──────────────────────────────────────────────
+        mf_pct        = elem.get("max_font_pct")
+        max_font_size = round(mf_pct / 100 * img_h) if mf_pct else None
         font, lines, font_size = _autofit_font(
-            text, font_hint, bw, bh, max_lines, el_leading, el_tracking
+            text, font_hint, bw, bh, max_lines, el_leading, el_tracking, max_font_size
         )
 
         # ── Measure lines ─────────────────────────────────────────────────────
