@@ -1,99 +1,67 @@
-# TASK: git-чекпоинт — сохранить накопленные этапы и запушить на GitHub
+# TASK: git-чекпоинт — сохранить «зону безопасности» на GitHub
 
 **От:** архитектор → **кому:** кодер (терминал)
-**Дата:** 2026-06-06
+**Дата:** 2026-06-08
 **Тип:** обслуживание репозитория
-**Git:** ⚠️ **ЭТО ЯВНОЕ ИСКЛЮЧЕНИЕ** из правила «кодер не коммитит» (`AGENTS.md`).
+**Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** из правила «кодер не коммитит» (`AGENTS.md`).
 В рамках ИМЕННО этого задания коммитить и пушить РАЗРЕШЕНО.
 
 ---
 
 ## Цель
 
-С момента клонирования (коммит `58c8477`) не закоммичено ничего. Накопились движки,
-канонические файлы, дерево `data/`, эталоны. Нужно безопасно сохранить это логичными
-коммитами и запушить на `origin` (GitHub). Коммит делается на машине пользователя
-(Windows), где git работает штатно.
+Этап «зона безопасности» принят архитектором (`tasks/done/2026-06-08_safe_box/ACCEPTED.md`).
+Нужно сохранить реальные изменения логичными коммитами и запушить на `origin`.
+Коммит делается на Windows-машине пользователя, где git работает штатно.
 
 **Принцип: сначала показать и проверить, потом коммитить. Никаких сюрпризов.**
 
+> ВАЖНО про CRLF: `git status` покажет «modified» почти у всех файлов — это шум
+> переводов строк (LF↔CRLF), не реальные правки. Истинный дифф смотри так:
+> `git diff --ignore-all-space --stat`. По существу изменены только движки и док-файлы.
+
 ---
 
-## Шаг 0 — Префлайт (проверка окружения). Если что-то не так — СТОП и отчёт.
-
-> ПРИМЕЧАНИЕ архитектора: при настройке всплыло, что `.git/config` был повреждён
-> (origin отсутствовал — застрял в `.git/config.lock`). Архитектор восстановил
-> `[remote "origin"]` (HTTPS). Осталось убрать остаточный `.git/config.lock`.
-
-Сначала удали остаточный lock (на Windows это сработает):
-```bat
-del .git\config.lock
-```
+## Шаг 0 — Префлайт. Если что-то не так — СТОП и отчёт.
 
 ```bash
-git status
-git rev-parse --abbrev-ref HEAD      # ожидаем ветку main
-git remote -v                        # ожидаем origin = https://github.com/Yuri-Sverdlov/AUTOMATION-LOWCONTENT-BOOK.git
-git log --oneline -1                 # ожидаем 58c8477
+git rev-parse --abbrev-ref HEAD      # ожидаем main
+git remote -v                        # origin = https://github.com/Yuri-Sverdlov/AUTOMATION-LOWCONTENT-BOOK.git
+git push --dry-run origin main       # проверка прав на ЗАПИСЬ (нужен GitHub-токен)
 ```
+Если dry-run падает с ошибкой авторизации — **СТОП, не коммить.** Впиши в REPORT.md:
+«нужен GitHub Personal Access Token с правом repo (push)».
 
-**Проверка PUSH-доступа (это HTTPS → нужен GitHub-токен, не SSH-ключ):**
-```bash
-git push --dry-run origin main
-```
-- `git ls-remote origin` пройдёт и без токена (репозиторий публичный, это только ЧТЕНИЕ) —
-  поэтому проверяй именно `--dry-run push`, он требует прав на ЗАПИСЬ.
-- Если dry-run просит логин/падает с ошибкой авторизации — **СТОП, не коммить.**
-  Напиши в REPORT.md: «нужен GitHub Personal Access Token с правом repo (push)».
-  Токен создаётся на github.com → Settings → Developer settings → Personal access tokens.
-
-## Шаг 1 — Безопасность: не утащить лишнее
+## Шаг 1 — Smoke-тест (не коммитить сломанное)
 
 ```bash
-git status --short
-git check-ignore -v .env output/ data/niches/2026-06_test/output/2026-06-05/book-1/cover.png 2>NUL
-```
-Убедись, что в кандидатах на коммит **НЕТ**: `.env`, файлов `output/`, `*.pdf`, `*.png`,
-`~$*`, `.claude/`. Они должны быть в `.gitignore`. Если что-то из этого всё же попадает
-в `git status` как трекаемое — **останься, сообщи архитектору, не коммить.**
-
-> Эталоны в `reference/series-1/` намеренно нужны в репозитории. НО `.gitignore` режет
-> `*.pdf`/`*.png` глобально, поэтому `reference/series-1/interior_reference.pdf` и т.п.
-> по умолчанию **не** попадут. Это ОК для этого чекпоинта (эталоны лежат локально).
-> Не форсируй их добавление в этой задаче — отметь в отчёте как открытый вопрос.
-
-## Шаг 2 — Smoke-тест движков (не коммитить сломанное)
-
-Прогони каждый и убедись, что отрабатывает без ошибок:
-```bash
-python engine/interior_lined.py
-python engine/cover_generator.py
-python engine/cover_to_pdf.py
 python engine/text_layout.py
 python engine/layout_variants.py
 ```
-Все пять должны завершиться без traceback. **Особое внимание `text_layout.py` и
-`layout_variants.py`** — подтверди, что `layout_variants.py` доходит до конца и печатает
-сводку без `AttributeError` (render_info не None). Если что-то падает — **СТОП, не коммить,
-опиши ошибку в REPORT.md.**
+Оба — без traceback. Если падает — **СТОП**, опиши ошибку в REPORT.md.
 
-## Шаг 3 — Коммиты логичными частями
+## Шаг 2 — Что коммитим (точечно, НЕ `git add -A` вслепую)
 
-Сформируй три коммита (добавляй точечно, не `git add -A` вслепую):
+**Коммит 1 — автоматизация:**
+```
+engine/text_layout.py engine/layout_variants.py
+```
+Сообщение: `feat: safe-box + max-font cap for text overlay (layout_variants)`
 
-1. **Канонический комплект + правила**
-   `AGENTS.md CLAUDE.md CONTEXT.md PROJECT_LOG.md STRUCTURE.md .gitignore tasks/`
-   Сообщение: `chore: canonical architect↔coder file system + task loop`
+**Коммит 2 — документация этапа:**
+```
+CONTEXT.md PROJECT_LOG.md tasks/REPORT.md tasks/TASK.md tasks/done/2026-06-08_safe_box/
+```
+Сообщение: `docs: accept safe-box stage; archive task + log`
 
-2. **Движки производства**
-   `engine/ requirements.txt`
-   Сообщение: `feat: interior + cover + text-layout engines (KDP-ready)`
+После каждого `git add ...` сделай `git status` и `git diff --cached --ignore-all-space --stat`,
+убедись, что добавилось ровно нужное.
 
-3. **Данные и эталоны**
-   `data/ reference/`
-   Сообщение: `chore: data/ tree (niche 2026-06_test) + series-1 reference`
+## Шаг 3 — НЕ коммитить демо-мусор
 
-После каждого `git add ...` сделай `git status` и убедись, что добавилось ровно нужное.
+Папки `tasks/lv_test/` и `tasks/lv_test_safe/` — разовые тест-прогоны. **НЕ добавляй их.**
+PNG и так режутся `.gitignore` глобально; но `run_demo.py`/`verify_criteria.py`/`*.json`
+из этих папок коммитить НЕ нужно. Если они попадают в `git status` — просто не делай им `git add`.
 
 ## Шаг 4 — Push
 
@@ -105,27 +73,26 @@ git push origin main
 
 ## Критерии приёмки (впиши в REPORT.md)
 
-1. Префлайт пройден: ветка `main`, origin корректный, доступ к remote есть. ✅/❌
-2. В коммиты НЕ попали: `.env`, `output/`, `*.pdf`, `*.png`, `~$*`, `.claude/`
-   (подтверди `git ls-files | grep` — их там нет). ✅/❌
-3. Smoke-тест: все 5 скриптов отработали без ошибок (впиши краткий результат каждого). ✅/❌
-4. Созданы 3 коммита с указанными сообщениями (впиши их хэши, `git log --oneline -4`). ✅/❌
-5. `git push origin main` прошёл; `git status` = «clean, up to date with origin/main». ✅/❌
-6. Впиши финальный `git log --oneline -5` и подтверждение, что рабочее дерево чистое. ✅/❌
+1. Префлайт: ветка `main`, origin корректный, push-доступ есть. ✅/❌
+2. Smoke-тест: оба скрипта без ошибок. ✅/❌
+3. Создан коммит 1 (движки) и коммит 2 (доки); впиши хэши (`git log --oneline -3`). ✅/❌
+4. В коммиты НЕ попали `tasks/lv_test*/`, `output/`, `*.pdf`, `*.png`, `.env`, `.claude/`
+   (подтверди `git show --stat` по каждому коммиту). ✅/❌
+5. `git push origin main` прошёл; `git status` = clean, up to date with origin/main. ✅/❌
 
 ---
 
 ## Границы / СТОП-условия
 
-- Если **нет доступа к origin** (аутентификация) — НЕ коммить, отчитайся, что нужен доступ.
-- Если **smoke-тест падает** — НЕ коммить, отчитайся об ошибке.
-- **НЕ** делать `git push --force`. **НЕ** трогать чужие ветки. **НЕ** менять историю.
-- **НЕ** добавлять секреты/бинарники/`output/` даже вручную.
-- Это разовое исключение: после выполнения снова действует правило «не коммитить без указания».
+- Нет push-доступа → НЕ коммить, отчитайся, что нужен токен.
+- Smoke-тест падает → НЕ коммить, отчитайся.
+- **НЕ** `git push --force`, **НЕ** трогать чужие ветки/историю.
+- **НЕ** добавлять `output/`, бинарники, секреты, демо-папки `lv_test*`.
+- Это разовое исключение: после выполнения снова действует «не коммитить без указания».
 
 ---
 
 ## После выполнения
 
-Заполни `tasks/REPORT.md`: результат префлайта, smoke-теста, список коммитов с хэшами,
-результат push, финальный `git status`. Что не вышло / стоп-условия. Остановись.
+Заполни `tasks/REPORT.md`: префлайт, smoke, хэши коммитов, результат push, финальный
+`git status` и `git log --oneline -4`. Останься.
