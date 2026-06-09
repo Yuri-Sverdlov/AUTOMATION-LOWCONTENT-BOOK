@@ -1,0 +1,19 @@
+# niche.yaml — Passport for 2026-06_snarky-notebook niche
+# Created: 2026-06-08 (build_cover.py acceptance task)
+
+niche: snarky-notebook
+audience: adults seeking humor
+format: 7.5x9.25
+interior_type: lined
+palette:
+  - "#F2ECE3"  # Background beige
+  - "#000000"  # Text black
+  - "#FFFFFF"  # White
+fonts:
+  - Arial
+  - DejaVu Sans
+title_formula: "{type} + {hook}"
+keywords:
+  - "..."  # Placeholder - to be filled during niche research
+description_template: null
+price: 6.99
