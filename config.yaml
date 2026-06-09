@@ -1,0 +1,11 @@
+# config.yaml — Simple mode: validated cover wrapper
+# User-created full spread (back+spine+front) @ exact pixel size for Amazon KDP
+
+cover_file: "data/niches/2026-06_snarky-notebook/output/2026-06-08/book-1/cover.png"
+unit: in              # in | cm
+cover_w: 15.4967      # Full spread WIDTH (in specified units)
+cover_h: 9.5          # Full spread HEIGHT
+dpi: 300
+niche: "2026-06_snarky-notebook"
+book: "book-2"        # Target book folder (book-2 for testing, to avoid overwriting input)
+# date: optional, defaults to today (YYYY-MM-DD)

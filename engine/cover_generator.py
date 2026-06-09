@@ -56,6 +56,7 @@ def build_cover(
     bg_color: str = "#F2ECE3",
     front_image: str | None = None,
     draw_guides: bool = False,
+    min_dpi: int = 300,
 ) -> dict:
     """
     Build a full KDP cover spread PNG (back cover + spine + front cover).
@@ -107,13 +108,43 @@ def build_cover(
     # ── Front cover ───────────────────────────────────────────────────────────
     if front_image and os.path.exists(front_image):
         fi  = Image.open(front_image).convert("RGB")
-        fw  = front_trim_x1 - front_trim_x0
-        fh  = trim_h_px
-        fi.thumbnail((fw, fh), Image.LANCZOS)
-        img.paste(fi, (
-            front_trim_x0 + (fw - fi.width)  // 2,
-            trim_y0       + (fh - fi.height) // 2,
-        ))
+        art_w, art_h = fi.size
+
+        # Target area: full front panel with bleed (spine edge to right bleed edge)
+        panel_x0 = spine_x1
+        panel_y0 = 0
+        panel_w  = full_w_px - spine_x1
+        panel_h  = full_h_px
+
+        # DPI check: effective resolution of art relative to physical panel size
+        panel_w_in = panel_w / DPI
+        panel_h_in = panel_h / DPI
+        eff_dpi = min(art_w / panel_w_in, art_h / panel_h_in)
+
+        if eff_dpi < min_dpi:
+            need_w = round(panel_w_in * min_dpi)
+            need_h = round(panel_h_in * min_dpi)
+            print(f"WARNING: front art ~{eff_dpi:.0f} DPI < {min_dpi}, upscaled -> "
+                  f"potential quality loss. Provide art at full resolution "
+                  f"(~{need_w}x{need_h}px).")
+
+        # Cover-fit (scale-to-fill): scale art to fill panel, preserving aspect ratio
+        # Excess is cropped at center. No distortion.
+        scale_w = panel_w / art_w
+        scale_h = panel_h / art_h
+        scale   = max(scale_w, scale_h)  # Take larger scale to ensure full coverage
+
+        new_w = round(art_w * scale)
+        new_h = round(art_h * scale)
+        fi_scaled = fi.resize((new_w, new_h), Image.LANCZOS)
+
+        # Crop to panel size, centered
+        crop_x = (new_w - panel_w) // 2
+        crop_y = (new_h - panel_h) // 2
+        fi_cropped = fi_scaled.crop((crop_x, crop_y, crop_x + panel_w, crop_y + panel_h))
+
+        # Paste into canvas at panel position
+        img.paste(fi_cropped, (panel_x0, panel_y0))
 
     # Text block: title / subtitle / author, centered in front safe zone
     front_safe_x0, front_safe_y0, front_safe_x1, front_safe_y1 = front_safe
