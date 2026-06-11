@@ -1,3 +1,6 @@
 reportlab
 pypdf
 Pillow
+openai
+python-dotenv
+pyyaml

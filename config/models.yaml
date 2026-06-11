@@ -1,0 +1,64 @@
+# models.yaml — конфиг моделей для конвейера названий (и шире)
+# Читается reusable/python/llm_client.py → LLMClient(role).
+#
+# Режим advanced: для КАЖДОЙ роли — свой словарь (provider/model/temperature/...).
+# Это единственный режим llm_client с per-role настройками (см. llm_client.py, строка ~86:
+# advanced[self.role] возвращается как есть). Поэтому каждый ролевой блок самодостаточен.
+#
+# ВАРИАНТ А (сейчас): одна модель у всех ролей, разница только в температуре.
+#   - joker_* (генераторы): высокая, РАЗНАЯ температура → разброс вариантов.
+#   - arbiter_* (арбитры):   низкая ненулевая → стабильная шкала оценок.
+# ВАРИАНТ B (на будущее): поставить joker_1/2/3 разные строки model (разные модели) —
+#   код менять НЕ нужно, только этот файл.
+#
+# СЕКРЕТОВ ЗДЕСЬ НЕТ. Реальный API-ключ — только в .env (он в .gitignore).
+# Строку model впиши сам: реальный slug модели OpenRouter (напр. семейства, к которому
+# у тебя есть доступ). Плейсхолдер "TODO-..." живой вызов работать не даст.
+
+mode: advanced
+provider: openrouter   # дефолт; в advanced дублируется в каждом ролевом блоке
+
+advanced:
+  # --- генераторы («шутники») ---
+  joker_1:
+    provider: openrouter
+    model: "minimax/minimax-M3"
+    temperature: 0.8
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  joker_2:
+    provider: openrouter
+    model: "minimax/minimax-M3"
+    temperature: 0.9
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  joker_3:
+    provider: openrouter
+    model: "minimax/minimax-M3"
+    temperature: 1.0
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  # --- арбитры (для следующих кирпичей; в кирпиче 1 не используются) ---
+  arbiter_1:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  arbiter_2:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  arbiter_3:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY

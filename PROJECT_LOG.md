@@ -5,6 +5,37 @@ Append-only журнал сессий проекта `AUTOMATION-LOWCONTENT-BOOK
 
 ---
 
+## 2026-06-11 — Сессия 11: конвейер названий (этапы 1–2) + закрыт дизайн
+
+**Сделано:**
+
+- **Закрыт дизайн** `tasks/backlog/2026-06_title-pipeline.md`: 7 открытых вопросов →
+  принятые решения (Вариант А сейчас / B на будущее; все настройки агента — в конфиге;
+  разнонаправленные температуры; оба шлагбаума `safety_risk<7` и длина KDP + `audience_fit`
+  из `niche.yaml`; свёртка веса+z-score, дефолт z-score; наборы крючков 1..N). Добавлена
+  памятка по z-score (формула, пример, аналогия).
+- **Каркас конфига:** `config/models.yaml` + `models.example.yaml` (режим `advanced`,
+  joker_1/2/3 t=0.8/0.9/1.0, arbiter_1/2/3 t=0.25, провайдер openrouter), `.env.example`.
+- **Этап 1 принят** (`tasks/done/2026-06-11_titles-brick1/`): `engine/titles/generator.py`
+  (load_niche / build_generation_prompt / parse_titles / generate_titles) + `prompts/joker_1.md`
+  + `tests/test_title_parse.py`. Архитектор проверил живьём (import, dry-run, 6 тестов).
+- **Этап 2 принят** (`tasks/done/2026-06-11_titles-stage2/`): `prompts/joker_2.md` (эмпатия),
+  `joker_3.md` (минимализм), `sources/hooks.example.yaml` (рыба), `engine/titles/pool.py`
+  (`build_pool` с инъекцией `generator_fn`, пул кандидатов с `id`/`author_role`/`hook_set_index`),
+  `tests/test_pool.py` (6/6). **Живой smoke на OpenRouter сработал:** модель `minimax/minimax-M3`
+  валидна, 12 кандидатов. `requirements.txt` пополнен (openai, python-dotenv, pyyaml).
+- **⚠ Инцидент безопасности:** реальный ключ OpenRouter попал в `.env.example` и `REPORT.md`
+  (оба под git). Устранено: ключ перенесён в `.env` (в `.gitignore`), example→плейсхолдер,
+  в REPORT замаскирован. Пользователю рекомендован **перевыпуск ключа**.
+- **Урок (подтверждён снова):** bash-песочница показала устаревший `requirements.txt` (3 пакета
+  вместо 6) — при приёмке сверять live-файлом. Поэтому коммит делаем на реальной Windows-машине.
+- Новый `tasks/TASK.md`: git-чекпоинт сессии 11 (коммит+пуш РАЗРЕШЁН). REPORT сброшен.
+
+**Дальше:** этап 3 — арбитры (промпты из рубрики DOE), round-robin, 6 критериев,
+жёсткие фильтры, свёртка сумма/z-score → ранжированный список.
+
+---
+
 ## 2026-06-11 — Сессия 10: внешняя ревизия проекта (свежий взгляд модели)
 
 **Сделано:**

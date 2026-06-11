@@ -1,0 +1,48 @@
+# models.example.yaml — образец конфига моделей (копия models.yaml с плейсхолдерами).
+# Назначение: остаётся в git как шаблон. Рабочий файл — config/models.yaml.
+# Скопируй этот файл в models.yaml (если его нет) и впиши реальные строки model.
+# Секретов здесь нет; API-ключ — только в .env (в .gitignore).
+
+mode: advanced
+provider: openrouter
+
+advanced:
+  # генераторы — высокая, разная температура (Вариант А: одна модель, разный t°)
+  joker_1:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.8
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+  joker_2:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.9
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+  joker_3:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 1.0
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+
+  # арбитры — низкая ненулевая температура (стабильная шкала)
+  arbiter_1:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+  arbiter_2:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
+  arbiter_3:
+    provider: openrouter
+    model: "TODO-впиши-модель-openrouter"
+    temperature: 0.25
+    max_tokens: 512
+    api_key_env: OPENROUTER_API_KEY
