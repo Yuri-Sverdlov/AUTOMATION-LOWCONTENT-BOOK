@@ -1,101 +1,53 @@
-# TASK: git-чекпоинт сессии 11 (конвейер названий, этапы 1–2)
+# TASK: добавочный чекпоинт — закоммитить QUICK_START.md
 
 **От:** архитектор → **кому:** кодер (терминал, реальная Windows-машина)
 **Дата:** 2026-06-11
-**Тип:** git-чекпоинт (закрытие сессии)
-**Git:** ✅ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — коммит и push в рамках ЭТОГО задания РАЗРЕШЕНЫ.
-**Важно:** выполнять на реальной машине (там корректный CRLF и git-credentials).
-Из песочницы git ненадёжен (CRLF-шум + устаревшие снимки) — не использовать.
+**Тип:** мини git-чекпоинт (один новый файл)
+**Git:** ✅ **РАЗРЕШЕНО** коммитить и пушить в рамках этого задания.
 
 ---
 
-## Что коммитим (итог сессии 11)
+## Контекст
 
-Конвейер названий, этапы 1–2 (приняты), закрытый дизайн, каркас конфига, обновлённые
-доки и архивы. Перечень намеренных изменений:
+Предыдущий чекпоинт s11 принят (`efd595a` на origin/main). После него архитектор создал
+новый файл `QUICK_START.md` (шпаргалка «как запустить», заполнен блок «Генерация названий»).
+Он ещё не в git. Плюс с этого задания добавились архивы:
+`tasks/done/2026-06-11_git-checkpoint-s11/` (TASK/REPORT/ACCEPTED) и этот `tasks/TASK.md`/`REPORT.md`.
 
-- `config/models.yaml`, `config/models.example.yaml`, `.env.example`
-- `engine/titles/__init__.py`, `generator.py`, `pool.py`
-- `engine/titles/prompts/joker_1.md`, `joker_2.md`, `joker_3.md`
-- `data/niches/2026-06_test/sources/hooks.example.yaml`
-- `tests/test_title_parse.py`, `tests/test_pool.py`
-- `requirements.txt`
-- `tasks/backlog/2026-06_title-pipeline.md`
-- `CONTEXT.md`, `PROJECT_LOG.md`, `tasks/TASK.md`, `tasks/REPORT.md`
-- `tasks/done/2026-06-11_titles-brick1/`, `tasks/done/2026-06-11_titles-stage2/`,
-  `tasks/done/2026-06-11_merge-sync/`
+## Что коммитим
 
-## ⛔ Что НЕ коммитим (проверь, что НЕ попало в индекс)
+- `QUICK_START.md` (корень)
+- `tasks/done/2026-06-11_git-checkpoint-s11/` (архив прошлого чекпоинта)
+- `tasks/TASK.md`, `tasks/REPORT.md` (это задание + отчёт)
 
-- `.env` (секрет, в `.gitignore`);
-- `tmp_pool.json` (временный вывод smoke-теста);
-- `engine/titles/__pycache__/`, любые `*.pyc`;
-- мусор в корне: файл `nul`, `*.docx` («Можешь ли…», «Рассуждение…»), `tasks/lv_test*`.
+## ⛔ Что НЕ коммитим
 
-## Шаг 0 — СКАН СЕКРЕТОВ (критично)
+`.env`, `tmp_pool.json`, `*.pyc`/`__pycache__`, `nul`, `*.docx`, `tasks/lv_test*`.
+
+## Шаги
 
 ```
-git grep -nE "sk-or-v1-[A-Za-z0-9]{20,}" -- . ':!tasks/done/*'
-```
-Ожидаемо: ПУСТО (реальный ключ должен быть только в `.env`, который не отслеживается).
-Если нашёлся реальный ключ в любом отслеживаемом файле — **СТОП**, замаскируй и сообщи.
-(Плейсхолдеры вида `YOUR_KEY_HERE`/`***REDACTED***` — это не секрет, они допустимы.)
-
-## Шаг 1 — обзор и подготовка индекса
-
-```
-git status
-git add -A
-git reset -- .env tmp_pool.json nul "engine/titles/__pycache__" *.docx tasks/lv_test
-git status        # убедись: в индексе только намеренные файлы из списка выше
-```
-(если какого-то мусорного пути нет — ничего страшного, `git reset` по нему просто без эффекта).
-
-## Шаг 2 — коммит
-
-```
-git commit -m "feat(titles): generation stage — 3 generators + candidate pool; close design; config scaffold" ^
-  -m "- title-pipeline design decisions + z-score memo (backlog)" ^
-  -m "- config/models.yaml (advanced, Variant A) + .env.example" ^
-  -m "- engine/titles: generator.py, pool.py, personas joker_1..3" ^
-  -m "- tests: test_title_parse, test_pool (smoke on OpenRouter OK)" ^
-  -m "- requirements: openai, python-dotenv, pyyaml" ^
-  -m "- docs: CONTEXT + PROJECT_LOG s11; archive brick1/stage2/merge-sync" ^
-  -m "- security: moved leaked OpenRouter key out of tracked files"
-```
-(в PowerShell перенос строки — backtick `` ` ``; можно и одной строкой одним `-m`.)
-
-## Шаг 3 — push
-
-```
+git grep -nE "sk-or-v1-[A-Za-z0-9]{20,}" -- .        # ожидаемо ПУСТО; если нашлось — СТОП
+git add QUICK_START.md tasks/done/2026-06-11_git-checkpoint-s11 tasks/TASK.md tasks/REPORT.md
+git status                                            # только намеренные файлы
+git commit -m "docs: QUICK_START guide (title-generation block) + archive s11 checkpoint"
 git push origin main
+git status -sb                                        # вровень с origin/main
+git log --oneline -3
 ```
-**НЕ** `--force`, **НЕ** rebase.
-
-## Шаг 4 — проверка
-
-```
-git status -sb      # ожидаем: вровень с origin/main, дерево чисто (кроме игнор-мусора)
-git log --oneline -5
-```
-
----
 
 ## Критерии приёмки (в REPORT.md)
 
-1. Скан секретов (шаг 0) — пусто; реального ключа в отслеживаемых файлах нет. ✅/❌
-2. В индексе только намеренные файлы; `.env`/`tmp_pool.json`/`__pycache__`/`*.docx`/`nul` НЕ в коммите. ✅/❌
-3. Коммит создан (впиши хэш). ✅/❌
-4. `git push origin main` прошёл (приведи строку `..  main -> main`). ✅/❌
-5. Финальный `git status -sb` = вровень с origin/main; `git log --oneline -5` (приведи). ✅/❌
+1. Скан секретов пуст. ✅/❌
+2. В индексе только намеренные файлы (`.env`/`tmp_pool.json`/мусор НЕ в коммите). ✅/❌
+3. Коммит создан (хэш). ✅/❌
+4. `git push origin main` прошёл (строка `..  main -> main`). ✅/❌
+5. `git status -sb` = вровень с origin/main; `git log --oneline -3`. ✅/❌
 
 ## СТОП-условия
 
-- Нашёлся реальный ключ в отслеживаемом файле → СТОП, маскируй, сообщи.
-- Ошибка авторизации push → СТОП, отчёт «нужен доступ к GitHub».
-- Любой неожиданный конфликт/расхождение с origin → СТОП, не делай `--force`, опиши.
+- Реальный ключ в отслеживаемом файле → СТОП. Никаких `--force`/rebase.
 
 ## После выполнения
 
-Заполни `tasks/REPORT.md`: результат скана секретов, что в индексе, хэш коммита, результат
-push, финальные `git status -sb` и `git log`.
+Заполни `tasks/REPORT.md`: скан, индекс, хэш, push, финальные `git status -sb` и `git log`.
