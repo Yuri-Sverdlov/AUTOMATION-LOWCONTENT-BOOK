@@ -1,17 +1,16 @@
-# TASK: git-чекпоинт — сохранить локальные доки + дропнуть устаревший stash
+# TASK: git-чекпоинт сессии 10 — доки ревизии на GitHub
 
 **От:** архитектор → **кому:** кодер (терминал, Windows)
-**Дата:** 2026-06-10
-**Тип:** обслуживание репозитория
+**Дата:** 2026-06-11
+**Тип:** обслуживание репозитория (только документация, код НЕ менялся)
 **Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — в рамках ЭТОГО задания коммитить и пушить РАЗРЕШЕНО.
 
 ---
 
 ## Цель
 
-Зафиксировать накопленные на этом ПК локальные правки (возврат ссылки DEV-NOTES в
-`AGENTS.md`, запись в журнал, архив приёмки сборщика) и **дропнуть устаревший stash**
-от прошлой синхронизации. Код движков НЕ менялся — это коммит документации/петли задач.
+Зафиксировать на GitHub результаты ревизии проекта (сессия 10): запись в журнал,
+обновлённый CONTEXT, 5 новых backlog-файлов, архив чекпоинта s9, новые TASK/REPORT.
 
 > CRLF: `git status` покажет «modified» у многих файлов — это шум LF↔CRLF. Истинные
 > изменения смотри через `git diff --ignore-all-space --stat`. Добавляй ТОЛЬКО
@@ -28,54 +27,56 @@ git remote -v                         :: origin = .../AUTOMATION-LOWCONTENT-BOOK
 git push --dry-run origin main        :: проверка доступа на запись
 ```
 
-## Шаг 1 — дропнуть устаревший stash
+## Шаг 1 — убрать мусор с диска (НЕ через git)
 ```bat
-git stash list
+del "~$OJECT-OVERVIEW.md" 2>NUL
+del "~$RUCTURE.md" 2>NUL
 ```
-- Если есть `stash@{0}: ... local edits before sync ...` — это он, устаревший. Дропни:
-```bat
-git stash drop stash@{0}
-```
-- Если stash-список пуст (уже дропнут вручную) — просто отметь это в отчёте, идём дальше.
-- Если в списке НЕ тот stash (другое описание) — СТОП, не трогай, сообщи архитектору.
+Это lock-файлы Word, в `.gitignore` уже есть — просто удалить с диска.
 
 ## Шаг 2 — посмотреть реальные изменения
 ```bat
 git status --short
 git diff --ignore-all-space --stat
 ```
-Ожидаемые к коммиту пути (док/петля задач):
-`AGENTS.md`, `PROJECT_LOG.md`, `CONTEXT.md` (если изменён), `tasks/TASK.md`,
-`tasks/REPORT.md`, новый каталог `tasks/done/2026-06-10_verify_build_cover/`.
+Ожидаемые к коммиту пути (всё — доки/петля задач):
+- `CONTEXT.md` (секция ревизии s10, приоритеты, статус движков)
+- `PROJECT_LOG.md` (запись сессии 10)
+- `tasks/TASK.md` (это задание), `tasks/REPORT.md` (сброшен в ожидание)
+- `tasks/backlog/2026-06_crib-builder.md`
+- `tasks/backlog/2026-06_parametrize-interior.md`
+- `tasks/backlog/2026-06_pytest-smoke.md`
+- `tasks/backlog/2026-06_published-csv-dedup.md`
+- `tasks/backlog/2026-06_first-real-book.md`
+- `tasks/done/2026-06-10_git-checkpoint-s9/` (TASK.md + REPORT.md + ACCEPTED.md)
 
 ## Шаг 3 — лёгкий smoke (не коммитить сломанное)
 ```bat
 python -m py_compile engine/build_cover.py engine/cover_generator.py engine/cover_to_pdf.py engine/text_layout.py engine/layout_variants.py engine/interior_lined.py
 ```
-Без ошибок. (Код не меняли, это просто страховка.)
+Без ошибок. (Код не меняли, это страховка.)
 
 ## Шаг 4 — коммит (точечно) и push
 ```bat
-git add AGENTS.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md tasks/done/2026-06-10_verify_build_cover
-:: добавь CONTEXT.md ТОЛЬКО если он реально изменён (по git diff выше)
+git add CONTEXT.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md tasks/backlog/2026-06_crib-builder.md tasks/backlog/2026-06_parametrize-interior.md tasks/backlog/2026-06_pytest-smoke.md tasks/backlog/2026-06_published-csv-dedup.md tasks/backlog/2026-06_first-real-book.md tasks/done/2026-06-10_git-checkpoint-s9
 git status
-git commit -m "docs: restore DEV-NOTES link; log s9 (sync+move+build_cover accepted); archive verify"
+git commit -m "docs: model review s10 — findings to context/log, 5 backlog items, archive s9 checkpoint"
 git push origin main
 ```
-После `git add` — проверь `git status`, что добавилось ровно нужное, без лишнего.
+После `git add` — проверь `git status`: добавилось ровно перечисленное, без лишнего.
 
 ## Шаг 5 — НЕ добавлять
 `output/`, любые `*.png`/`*.pdf` (генерёжка), `data/niches/*/output/`, `.claude/`,
-`~$*`, `.env`, `nul`, тестовые `book-verify-*` папки. Всё это в `.gitignore` или мусор —
-если всплыло в `git status`, просто не делай `git add`.
+`~$*`, `.env`, `nul`, `tasks/image_test.png`. Если всплыло в `git status` —
+просто не делай `git add`.
 
 ---
 
 ## Критерии приёмки (в REPORT.md)
 
 1. Префлайт: ветка main, origin ок, push-доступ есть. ✅/❌
-2. Stash: устаревший дропнут (или подтверждено, что список пуст). ✅/❌
-3. В коммит вошли только доки/петля задач (перечисли файлы); генерёжка/мусор НЕ вошли. ✅/❌
+2. Lock-файлы `~$*` удалены с диска. ✅/❌
+3. В коммит вошли только перечисленные доки (приведи список); генерёжка/мусор НЕ вошли. ✅/❌
 4. py_compile без ошибок. ✅/❌
 5. Коммит создан (впиши хэш и сообщение); `git push origin main` прошёл. ✅/❌
 6. Финальный `git status` = clean, up to date; `git log --oneline -3`. ✅/❌
@@ -85,13 +86,13 @@ git push origin main
 ## Границы / СТОП-условия
 
 - Если нет push-доступа — СТОП, отчёт (нужен токен).
-- Если stash в списке не тот — СТОП, не дропать.
 - НЕ `git push --force`, НЕ переписывать историю, НЕ добавлять генерёжку/мусор.
+- НЕ трогать код движков и `config.yaml` — это чисто документационный коммит.
 - Разовое исключение: после пуша снова «не коммитить без указания».
 
 ---
 
 ## После выполнения
 
-Заполни `tasks/REPORT.md`: префлайт, судьба stash, список закоммиченного, хэш, push,
-финальный `git status`/`git log`. Остановись.
+Заполни `tasks/REPORT.md`: префлайт, удаление мусора, список закоммиченного, хэш,
+push, финальный `git status`/`git log`. Остановись.
