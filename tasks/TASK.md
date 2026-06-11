@@ -1,88 +1,109 @@
-# TASK: git-чекпоинт сессии 8 — сохранить всё на GitHub
+# TASK: синхронизация репозитория с GitHub (две машины) → потом push хвоста
 
 **От:** архитектор → **кому:** кодер (терминал)
 **Дата:** 2026-06-08
-**Тип:** обслуживание репозитория
-**Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — в рамках ЭТОГО задания коммитить и пушить РАЗРЕШЕНО.
+**Тип:** обслуживание репозитория (синхронизация двух компьютеров)
+**Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — коммитить, pull и push в рамках ЭТОГО задания РАЗРЕШЕНО.
 
 ---
 
-## Цель
+## Контекст и цель
 
-Закоммитить результаты сессии 8 (оркестратор + простой режим + доки) и запушить на
-`origin/main`. Коммит — на Windows-машине пользователя (git + креды работают).
+Пользователь работал на **втором компьютере** и запушил туда новые коммиты в
+`origin/main`. На ЭТОЙ машине есть свой незапушенный хвост (правки `CONTEXT.md`,
+`tasks/TASK.md`, новый `tasks/backlog/2026-06_title-pipeline.md`). Истории могли
+**разойтись**. Нужно безопасно свести их: подтянуть чужое, слить, и только потом запушить.
 
-> CRLF: `git status` покажет «modified» у кучи трекнутых файлов — это шум LF↔CRLF.
-> Истинный дифф: `git diff --ignore-all-space --stat`. Добавляем ТОЛЬКО перечисленные пути.
+**GitHub = источник правды.** Порядок: зафиксировать локальное → подтянуть удалённое →
+слить → запушить. **Никаких `--force`.**
 
-## Шаг 0 — префлайт (если падает авторизация — СТОП, отчёт)
+## 🔴 Главное правило этого задания
+
+**Конфликты слияния в `CONTEXT.md`, `tasks/TASK.md`, `tasks/REPORT.md` НЕ разрешать
+самостоятельно.** При любом конфликте в этих файлах — **СТОП**, перечисли конфликтные
+файлы и спорные куски в `REPORT.md`, оставь решение архитектору/пользователю. Авто-слияние
+канонических файлов запрещено (там нужен человеческий выбор, что оставить).
+
+---
+
+## Шаг 0 — префлайт
 
 ```
-git rev-parse --abbrev-ref HEAD          # main
-git remote -v                            # origin = .../AUTOMATION-LOWCONTENT-BOOK.git
-git push --dry-run origin main
+git rev-parse --abbrev-ref HEAD        # main
+git remote -v                          # origin = .../Yuri-Sverdlov/AUTOMATION-LOWCONTENT-BOOK.git
 ```
+Если ветка не main или remote другой — СТОП, отчёт.
 
-## Шаг 1 — smoke (не коммитить сломанное)
+## Шаг 1 — зафиксировать локальный хвост (чтобы дерево было чистым перед pull)
+
+Точечно (НЕ `git add -A`):
+```
+git add CONTEXT.md tasks/TASK.md tasks/backlog/2026-06_title-pipeline.md
+git diff --cached --ignore-all-space --stat
+git commit -m "docs: title-pipeline design + context/task tail (session 8)"
+```
+НЕ добавлять: `nul`, `tasks/lv_test*`, посторонний `"…один.docx"`, `output/`, бинарники.
+Если из-за CRLF в индекс подцепились другие трекнутые доки без смысловых правок —
+`git restore --staged <файл>`.
+
+## Шаг 2 — посмотреть расклад (подтянуть инфо, ещё не сливая)
 
 ```
-python engine/build_cover.py             # простой режим: соберёт cover в book-2, без traceback
-python -m py_compile engine/build_cover.py engine/cover_generator.py
+git fetch origin
+git status -sb
+git log --oneline --graph --all -20
 ```
+Определи: origin ушёл вперёд / истории разошлись / мы впереди. Зафиксируй картину в REPORT.
 
-## Шаг 2 — точечные коммиты (НЕ `git add -A`)
+## Шаг 3 — слияние (merge, НЕ rebase)
 
-**Коммит 1 — код:**
 ```
-git add engine/build_cover.py engine/cover_generator.py config.yaml
-git commit -m "feat: simple-mode validated cover wrapper + front cover-fit"
+git pull --no-rebase origin main
 ```
+- **Чисто слилось (без конфликтов)** → переходи к Шагу 4.
+- **Конфликты в `CONTEXT.md` / `tasks/TASK.md` / `tasks/REPORT.md`** → **СТОП.**
+  Выполни `git status` + `git diff` по конфликтным файлам, выпиши конфликтные блоки
+  (маркеры `<<<<<<< / ======= / >>>>>>>`) в REPORT. НЕ коммить слияние.
+  Дай пользователю выбор: разрулить вручную, либо откатить слиянием `git merge --abort`.
+- **Конфликты только в прочих, явно тривиальных файлах** → можно разрулить, но опиши, что
+  именно изменил, в REPORT.
 
-**Коммит 2 — паспорт ниши:**
-```
-git add data/niches/2026-06_snarky-notebook/niche.yaml
-git commit -m "chore: add 2026-06_snarky-notebook niche passport"
-```
-
-**Коммит 3 — доки/задачи/архивы/бэклог:**
-```
-git add CONTEXT.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md tasks/backlog ^
-  tasks/done/2026-06-08_git-checkpoint tasks/done/2026-06-08_build-cover-chain ^
-  tasks/done/2026-06-08_simple-validate-wrap
-git commit -m "docs: accept cover-chain + simple-mode; archive tasks; add backlog; log s8"
-```
-
-После каждого `git add` — `git status` и `git diff --cached --ignore-all-space --stat`,
-убедись, что добавилось ровно нужное.
-
-## Шаг 3 — НЕ добавлять
-
-`nul` (мусор от `> nul`), `tasks/lv_test/`, `tasks/lv_test_safe/`, посторонний
-`"Можешь ли ты прочитать один.docx"`, любые `output/`, `*.png`, `*.pdf` (и так в `.gitignore`).
-Если попали в `git status` — просто не делай им `git add`.
-
-## Шаг 4 — push
+## Шаг 4 — push (только если слияние прошло чисто или одобрено)
 
 ```
 git push origin main
 ```
 
+## Шаг 5 — проверка
+
+```
+git status -sb        # ожидаем: вровень с origin/main, дерево чисто
+git log --oneline -10
+```
+
+---
+
 ## Критерии приёмки (в REPORT.md)
 
-1. Префлайт: ветка main, origin ок, push-доступ есть. ✅/❌
-2. Smoke: `build_cover.py` без traceback, py_compile ок. ✅/❌
-3. Созданы 3 коммита; впиши хэши (`git log --oneline -4`). ✅/❌
-4. В коммиты НЕ попали `nul`, `lv_test*`, `.docx`, `output/`, бинарники
-   (подтверди `git show --stat` по каждому). ✅/❌
-5. `git push origin main` прошёл; `git status` чисто, up to date. ✅/❌
+1. Префлайт: ветка main, origin корректный. ✅/❌
+2. Локальный хвост закоммичен (в индексе ровно CONTEXT.md + tasks/TASK.md + backlog-файл);
+   хэш коммита. ✅/❌
+3. `git fetch` + расклад: ушёл ли origin вперёд / разошлись ли истории (опиши). ✅/❌
+4. Результат `git pull`: чисто / конфликты. Если конфликты в канонических файлах — СТОП,
+   список файлов и спорных блоков в отчёте, слияние НЕ закоммичено. ✅/❌
+5. `git push origin main` прошёл (если дошли до него); финальный `git status` = чисто,
+   up to date; `git log --oneline -10`. ✅/❌
 
-## Границы
+## Границы / СТОП-условия
 
-- НЕ `git push --force`, НЕ трогать чужие ветки/историю.
-- НЕ добавлять мусор/бинарники/output.
-- Разовое исключение: после пуша снова «не коммитить без указания».
+- **НЕ** `git push --force`, **НЕ** `git rebase`, **НЕ** трогать чужие ветки/историю.
+- **НЕ** авто-разрешать конфликты в `CONTEXT.md`/`tasks/TASK.md`/`tasks/REPORT.md`.
+- Ошибка авторизации на fetch/push → СТОП, отчёт «нужен доступ к GitHub».
+- Перенос материалов по названиям (`reference/`) — **вне этого задания**, отдельным шагом
+  после успешной синхронизации.
 
 ## После выполнения
 
-Заполни `tasks/REPORT.md`: префлайт, smoke, 3 хэша, результат push, финальный
-`git status` и `git log --oneline -5`.
+Заполни `tasks/REPORT.md`: префлайт, хэш коммита хвоста, расклад после fetch, результат
+pull (чисто/конфликты + детали), результат push, финальные `git status -sb` и
+`git log --oneline -10`. При конфликтах в канонических файлах — остановись и жди архитектора.
