@@ -1,98 +1,109 @@
-# TASK: git-чекпоинт сессии 10 — доки ревизии на GitHub
+# TASK: sync ПК1 ↔ GitHub — слияние работы двух компьютеров
 
-**От:** архитектор → **кому:** кодер (терминал, Windows)
+**От:** архитектор → **кому:** кодер (терминал, Windows, ПК1)
 **Дата:** 2026-06-11
-**Тип:** обслуживание репозитория (только документация, код НЕ менялся)
-**Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — в рамках ЭТОГО задания коммитить и пушить РАЗРЕШЕНО.
+**Тип:** обслуживание репозитория (merge + конфликты в доках)
+**Git:** ⚠️ **ЯВНОЕ ИСКЛЮЧЕНИЕ** — в рамках ЭТОГО задания коммитить, мёрджить и пушить РАЗРЕШЕНО.
 
 ---
 
-## Цель
+## Ситуация (прочитай, прежде чем делать)
 
-Зафиксировать на GitHub результаты ревизии проекта (сессия 10): запись в журнал,
-обновлённый CONTEXT, 5 новых backlog-файлов, архив чекпоинта s9, новые TASK/REPORT.
+- **Локально (ПК1):** стоим на `bbdf614`. НЕ закоммичено: приёмка чекпоинта s10
+  (CONTEXT, PROJECT_LOG, архив `tasks/done/2026-06-11_git-checkpoint-s10/`,
+  это задание + REPORT) и 2 backlog-файла, забытые в s10.
+- **origin/main (работа с ПК2):** 3 коммита поверх `bbdf614`, HEAD = `436c563` —
+  титульный конвейер (`engine/titles/`, `tests/`, `config/`, `QUICK_START.md`,
+  backlog `2026-06_title-pipeline.md`, архивы приёмок).
+- **Гарантированные конфликты:** `CONTEXT.md`, `PROJECT_LOG.md`, `tasks/TASK.md`,
+  `tasks/REPORT.md` — менялись на обеих машинах.
 
-> CRLF: `git status` покажет «modified» у многих файлов — это шум LF↔CRLF. Истинные
-> изменения смотри через `git diff --ignore-all-space --stat`. Добавляй ТОЛЬКО
-> перечисленные ниже пути (точечно, без `git add -A`).
+Порядок принят: сначала закоммитить локальное (без push) → merge → разрешить
+конфликты по правилам ниже → push.
+
+> CRLF: `git status` шумит «modified» на куче файлов — истина через
+> `git diff --ignore-all-space --stat`. Добавлять ТОЛЬКО перечисленные пути.
 
 ---
 
-## Шаг 0 — префлайт (если падает авторизация — СТОП, отчёт)
+## Шаг 0 — префлайт
 ```bat
 del .git\config.lock 2>NUL
 del .git\index.lock  2>NUL
 git rev-parse --abbrev-ref HEAD       :: main
-git remote -v                         :: origin = .../AUTOMATION-LOWCONTENT-BOOK.git
-git push --dry-run origin main        :: проверка доступа на запись
+git log --oneline -1                  :: bbdf614
+git fetch origin
+git log --oneline origin/main -1      :: 436c563
+git push --dry-run origin main 2>&1   :: упадёт "non-fast-forward" — это ОЖИДАЕМО, не СТОП
 ```
 
-## Шаг 1 — убрать мусор с диска (НЕ через git)
+## Шаг 1 — локальный коммит ПК1 (БЕЗ push)
 ```bat
-del "~$OJECT-OVERVIEW.md" 2>NUL
-del "~$RUCTURE.md" 2>NUL
-```
-Это lock-файлы Word, в `.gitignore` уже есть — просто удалить с диска.
-
-## Шаг 2 — посмотреть реальные изменения
-```bat
-git status --short
-git diff --ignore-all-space --stat
-```
-Ожидаемые к коммиту пути (всё — доки/петля задач):
-- `CONTEXT.md` (секция ревизии s10, приоритеты, статус движков)
-- `PROJECT_LOG.md` (запись сессии 10)
-- `tasks/TASK.md` (это задание), `tasks/REPORT.md` (сброшен в ожидание)
-- `tasks/backlog/2026-06_crib-builder.md`
-- `tasks/backlog/2026-06_parametrize-interior.md`
-- `tasks/backlog/2026-06_pytest-smoke.md`
-- `tasks/backlog/2026-06_published-csv-dedup.md`
-- `tasks/backlog/2026-06_first-real-book.md`
-- `tasks/done/2026-06-10_git-checkpoint-s9/` (TASK.md + REPORT.md + ACCEPTED.md)
-
-## Шаг 3 — лёгкий smoke (не коммитить сломанное)
-```bat
-python -m py_compile engine/build_cover.py engine/cover_generator.py engine/cover_to_pdf.py engine/text_layout.py engine/layout_variants.py engine/interior_lined.py
-```
-Без ошибок. (Код не меняли, это страховка.)
-
-## Шаг 4 — коммит (точечно) и push
-```bat
-git add CONTEXT.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md tasks/backlog/2026-06_crib-builder.md tasks/backlog/2026-06_parametrize-interior.md tasks/backlog/2026-06_pytest-smoke.md tasks/backlog/2026-06_published-csv-dedup.md tasks/backlog/2026-06_first-real-book.md tasks/done/2026-06-10_git-checkpoint-s9
+git add CONTEXT.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md tasks/done/2026-06-11_git-checkpoint-s10 tasks/backlog/2026-06_art-palette-STAGES.md tasks/backlog/2026-06_external-ideas-research.md
 git status
-git commit -m "docs: model review s10 — findings to context/log, 5 backlog items, archive s9 checkpoint"
-git push origin main
+git commit -m "docs: accept s10 checkpoint (archive) + 2 missed backlog files (PC1, pre-merge)"
 ```
-После `git add` — проверь `git status`: добавилось ровно перечисленное, без лишнего.
+Проверь по `git status`: добавилось ровно перечисленное, без генерёжки
+(`output/`, `*.png`/`*.pdf`, `data/niches/*/output/`, `.claude/`, `tasks/image_test.png`).
 
-## Шаг 5 — НЕ добавлять
-`output/`, любые `*.png`/`*.pdf` (генерёжка), `data/niches/*/output/`, `.claude/`,
-`~$*`, `.env`, `nul`, `tasks/image_test.png`. Если всплыло в `git status` —
-просто не делай `git add`.
+## Шаг 2 — merge работы ПК2
+```bat
+git pull --no-rebase origin main
+```
+Ожидаем конфликты в 4 файлах. Правила разрешения:
+
+| Файл | Правило |
+|------|---------|
+| `PROJECT_LOG.md` | **Оставить ОБЕ стороны.** Журнал append-only: записи обеих машин сохраняются полностью, упорядочить по дате — новые сверху. Ничего не удалять. |
+| `CONTEXT.md` | **Объединить.** Секция «Ревизия проекта (2026-06-11, s10)» из ПК1 — сохранить. Изменения ПК2 (титульный конвейер и пр.) — сохранить. Абзац «Сейчас в tasks/TASK.md» — взять версию ПК1 (это sync-задание). Списки бэклога — объединить (все пункты обеих сторон, без дублей). |
+| `tasks/TASK.md` | **Взять версию ПК1** (этот файл): `git checkout --ours tasks/TASK.md` |
+| `tasks/REPORT.md` | **Взять версию ПК1** (заготовка «ожидает»): `git checkout --ours tasks/REPORT.md`. НО сначала проверь: текст REPORT с ПК2 (origin-версия) должен дублироваться в `tasks/done/2026-06-11_*/REPORT.md`. Если НЕ дублируется — СТОП, не теряем отчёт, сообщи архитектору. |
+
+После правок:
+```bat
+git add CONTEXT.md PROJECT_LOG.md tasks/TASK.md tasks/REPORT.md
+git status        :: конфликтов не осталось
+git commit        :: стандартное merge-сообщение
+```
+
+## Шаг 3 — проверка после слияния
+```bat
+pip install -r requirements.txt
+python -m py_compile engine/build_cover.py engine/cover_generator.py engine/cover_to_pdf.py engine/text_layout.py engine/layout_variants.py engine/interior_lined.py engine/titles/generator.py engine/titles/pool.py
+python -m pytest tests/ -q
+```
+pytest должен быть зелёным (тесты приехали с ПК2). Если падает из-за отсутствия
+API-ключей/сети — отметь в отчёте, какие именно тесты, НЕ СТОП.
+
+## Шаг 4 — push
+```bat
+git push origin main
+git status          :: clean, up to date
+git log --oneline -6
+```
 
 ---
 
 ## Критерии приёмки (в REPORT.md)
 
-1. Префлайт: ветка main, origin ок, push-доступ есть. ✅/❌
-2. Lock-файлы `~$*` удалены с диска. ✅/❌
-3. В коммит вошли только перечисленные доки (приведи список); генерёжка/мусор НЕ вошли. ✅/❌
-4. py_compile без ошибок. ✅/❌
-5. Коммит создан (впиши хэш и сообщение); `git push origin main` прошёл. ✅/❌
-6. Финальный `git status` = clean, up to date; `git log --oneline -3`. ✅/❌
+1. Pre-merge коммит ПК1 создан (хэш), ровно перечисленные пути. ✅/❌
+2. Merge выполнен; конфликты разрешены по правилам (перечисли, что и как). ✅/❌
+3. В `PROJECT_LOG.md` присутствуют записи ОБЕИХ машин (ничего не потеряно). ✅/❌
+4. py_compile чистый; pytest — результат (зелёный / что упало и почему). ✅/❌
+5. Push прошёл; финальный `git status` clean; `git log --oneline -6`. ✅/❌
 
 ---
 
 ## Границы / СТОП-условия
 
-- Если нет push-доступа — СТОП, отчёт (нужен токен).
-- НЕ `git push --force`, НЕ переписывать историю, НЕ добавлять генерёжку/мусор.
-- НЕ трогать код движков и `config.yaml` — это чисто документационный коммит.
+- НЕ `git push --force`, НЕ rebase, НЕ переписывать историю.
+- НЕ удалять контент чужой стороны при разрешении конфликтов — при сомнении
+  сохраняй обе версии и помечай вопросом в отчёте.
+- REPORT ПК2 не найден в `tasks/done/` → СТОП (см. таблицу).
+- Merge пошёл вразнос (конфликтов сильно больше 4 файлов, бинарники и т.п.) →
+  `git merge --abort`, СТОП, отчёт.
 - Разовое исключение: после пуша снова «не коммитить без указания».
-
----
 
 ## После выполнения
 
-Заполни `tasks/REPORT.md`: префлайт, удаление мусора, список закоммиченного, хэш,
-push, финальный `git status`/`git log`. Остановись.
+Заполни `tasks/REPORT.md` по критериям 1–5. Остановись.
