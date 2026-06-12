@@ -1,0 +1,7 @@
+# hooks.example.yaml — наборы крючков на вход генерации.
+# РЫБА (заглушки). Для боевого прогона скопируй в hooks.yaml и впиши реальные
+# топовые фразы с Amazon (человек выбирает руками — код их не добывает).
+
+hook_sets:
+  - ["productivity boost", "goal crusher"]
+  - ["self care journal", "anxiety relief"]
